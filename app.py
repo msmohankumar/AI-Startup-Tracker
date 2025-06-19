@@ -23,10 +23,12 @@ def save_json(filename, data):
         json.dump(data, f, indent=2)
 
 def export_to_csv(data, fields, filename):
+    # Filter data to only include specified fields
+    filtered_data = [{field: item.get(field, "") for field in fields} for item in data]
     with open(filename, mode="w", newline="", encoding="utf-8") as file:
         writer = csv.DictWriter(file, fieldnames=fields)
         writer.writeheader()
-        writer.writerows(data)
+        writer.writerows(filtered_data)
 
 def summarize_url(url):
     try:
@@ -260,9 +262,38 @@ elif page == "Upload Files":
 
 elif page == "Export Data":
     st.title("📤 Export Your Data")
+    
+    # Export Ideas to CSV
     if st.button("Export Ideas to CSV"):
-        export_to_csv(st.session_state.ideas, ["name", "title", "description", "timestamp"], "ideas_export.csv")
-        st.success("ideas_export.csv saved")
+        try:
+            export_to_csv(st.session_state.ideas, ["name", "title", "description", "timestamp"], "ideas_export.csv")
+            st.success("ideas_export.csv saved")
+        except Exception as e:
+            st.error(f"Error exporting ideas: {str(e)}")
+
+    # Export Links to CSV
     if st.button("Export Links to CSV"):
-        export_to_csv(st.session_state.links, ["url", "note", "timestamp"], "links_export.csv")
-        st.success("links_export.csv saved")
+        try:
+            export_to_csv(st.session_state.links, ["url", "note", "timestamp"], "links_export.csv")
+            st.success("links_export.csv saved")
+        except Exception as e:
+            st.error(f"Error exporting links: {str(e)}")
+
+    # Download buttons for the exported CSV files
+    if os.path.exists("ideas_export.csv"):
+        with open("ideas_export.csv", "rb") as f:
+            st.download_button(
+                label="Download Ideas CSV",
+                data=f,
+                file_name="ideas_export.csv",
+                mime="text/csv"
+            )
+
+    if os.path.exists("links_export.csv"):
+        with open("links_export.csv", "rb") as f:
+            st.download_button(
+                label="Download Links CSV",
+                data=f,
+                file_name="links_export.csv",
+                mime="text/csv"
+            )
