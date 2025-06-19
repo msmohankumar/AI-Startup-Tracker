@@ -125,6 +125,21 @@ elif page == "Roadmap":
     for step in roadmap_items:
         st.info(step)
 
+    st.subheader("📘 Helpful Links")
+    st.markdown("- [Startup India Guide](https://www.startupindia.gov.in)")
+    st.markdown("- [MVP Tools & Platforms](https://nocode.tech/tools)")
+    st.markdown("- [Grant Application Guide](https://www.msins.in)")
+
+    st.subheader("🧩 Key Actions")
+    st.checkbox("Have you defined your target market?")
+    st.checkbox("Do you have a working prototype?")
+    st.checkbox("Have you registered your startup officially?")
+    st.checkbox("Have you pitched to any incubators?")
+    st.checkbox("Have you reached out to any early adopters?")
+
+    st.subheader("📊 Quick Poll")
+    st.radio("How confident are you about your startup progress?", ["Very confident", "Somewhat confident", "Need support"], key="progress_poll")
+
 elif page == "Useful Links":
     st.title("🔗 Useful Links and Resources")
     link_file = "links.json"
