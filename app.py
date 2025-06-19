@@ -54,14 +54,13 @@ page = st.sidebar.radio("Navigate", [
 # ---------- Main Content ----------
 st.title("AI Startup Tracker")
 
-# Create a layout with two columns
-col1, col2 = st.columns([1, 3])
-
-with col1:
-    st.header("Navigation")
+# Create a full-width layout
+with st.container():
+    # Create a single column layout for better centering
+    st.subheader("Welcome to the AI Startup Tracker")
     st.write("Use the sidebar to navigate through the features.")
 
-with col2:
+    # Create a layout for the main sections
     if page == "Phase Tracker":
         st.header("📌 Startup Phase Tracker")
         phases = [
@@ -87,7 +86,7 @@ with col2:
         name = st.text_input("Your Name:")
         title = st.text_input("Idea Title:")
         new_idea = st.text_area("Describe your idea here:")
-        
+
         if st.button("Save Idea"):
             if name.strip() and title.strip():  # Allow saving even if description is empty
                 new_idea_entry = {
@@ -272,7 +271,7 @@ with col2:
 
     elif page == "Export Data":
         st.header("📤 Export Your Data")
-        
+
         # Export Ideas to CSV
         if st.button("Export Ideas to CSV"):
             try:
