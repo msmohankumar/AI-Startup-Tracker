@@ -39,14 +39,16 @@ def summarize_url(url):
     except Exception as e:
         return f"Error fetching content: {str(e)}"
 
-# ---------- Sidebar Navigation ----------
+# ---------- Sidebar ----------
 st.sidebar.title("🚀 AI Startup Tracker")
-page = st.sidebar.radio("Go to", ["Phase Tracker", "Ideas", "Testing Notes", "Roadmap", "Useful Links", "Upload Files", "Export Data"])
+page = st.sidebar.radio("Go to", [
+    "Phase Tracker", "Ideas", "Testing Notes", "Roadmap",
+    "Useful Links", "Upload Files", "Export Data"
+])
 
-# ---------- Phase Tracker ----------
+# ---------- Pages ----------
 if page == "Phase Tracker":
     st.title("📌 Startup Phase Tracker")
-
     phases = [
         "Ideation & Learning (0-1 month)",
         "Market Research & Validation (1-2.5 months)",
@@ -56,20 +58,16 @@ if page == "Phase Tracker":
         "First Customers & Feedback (6–9 months)",
         "Scale & Fundraise (9–12 months)"
     ]
-
     for phase in phases:
         if st.checkbox(phase, key=phase):
             st.success(f"✅ Completed: {phase}")
 
-# ---------- Ideas Section ----------
 elif page == "Ideas":
     st.title("💡 Idea Box")
-
     idea_file = "ideas.json"
     if "ideas" not in st.session_state:
         st.session_state.ideas = load_json(idea_file)
 
-    st.subheader("Add New Idea")
     new_idea = st.text_area("Describe your idea here:")
     if st.button("Save Idea"):
         if new_idea.strip():
@@ -97,10 +95,8 @@ elif page == "Ideas":
                     save_json(idea_file, st.session_state.ideas)
                     st.experimental_rerun()
 
-# ---------- Testing Notes ----------
 elif page == "Testing Notes":
     st.title("🧪 Testing Feedback Log")
-
     if "test_notes" not in st.session_state:
         st.session_state.test_notes = []
 
@@ -115,10 +111,8 @@ elif page == "Testing Notes":
     for note in reversed(st.session_state.test_notes):
         st.markdown(f"- [{note['timestamp']}] {note['note']}")
 
-# ---------- Roadmap ----------
 elif page == "Roadmap":
     st.title("🛣️ Roadmap Overview")
-
     roadmap_items = [
         "Month 0-1: Learn and Ideate",
         "Month 1-2.5: Market Research",
@@ -131,15 +125,12 @@ elif page == "Roadmap":
     for step in roadmap_items:
         st.info(step)
 
-# ---------- Useful Links ----------
 elif page == "Useful Links":
     st.title("🔗 Useful Links and Resources")
-
     link_file = "links.json"
     if "links" not in st.session_state:
         st.session_state.links = load_json(link_file)
 
-    st.subheader("Add a New Link")
     new_link = st.text_input("Enter the URL:")
     new_note = st.text_area("What is this link about?")
     if st.button("Add Link"):
@@ -172,10 +163,8 @@ elif page == "Useful Links":
                     save_json(link_file, st.session_state.links)
                     st.experimental_rerun()
 
-# ---------- File Upload ----------
 elif page == "Upload Files":
     st.title("📄 Upload Your Files")
-
     upload_file_path = "uploaded_files.json"
     if "uploaded_files" not in st.session_state:
         st.session_state.uploaded_files = load_json(upload_file_path)
@@ -195,22 +184,39 @@ elif page == "Upload Files":
         st.success(f"Uploaded: {uploaded_file.name}")
 
     st.subheader("📚 Previously Uploaded Files")
-    for file in st.session_state.uploaded_files:
-        with open(file['path'], "rb") as f:
-            st.download_button(
-                label=f"📥 Download {file['filename']} ({file['timestamp']})",
-                data=f.read(),
-                file_name=file['filename']
-            )
+    for i, file in enumerate(st.session_state.uploaded_files):
+        with st.expander(f"{file['filename']} ({file['timestamp']})"):
+            with open(file['path'], "rb") as f:
+                st.download_button(
+                    label=f"📥 Download {file['filename']}",
+                    data=f.read(),
+                    file_name=file['filename'],
+                    key=f"download_{i}"
+                )
+            col1, col2 = st.columns([1, 1])
+            with col1:
+                new_filename = st.text_input(f"Rename File {i+1}", value=file['filename'], key=f"rename_{i}")
+                if st.button(f"💾 Update File {i+1}", key=f"update_{i}"):
+                    new_path = os.path.join("uploads", new_filename)
+                    os.rename(file['path'], new_path)
+                    st.session_state.uploaded_files[i]['filename'] = new_filename
+                    st.session_state.uploaded_files[i]['path'] = new_path
+                    save_json(upload_file_path, st.session_state.uploaded_files)
+                    st.success("File renamed!")
+                    st.experimental_rerun()
+            with col2:
+                if st.button(f"❌ Delete File {i+1}", key=f"delete_{i}"):
+                    os.remove(file['path'])
+                    st.session_state.uploaded_files.pop(i)
+                    save_json(upload_file_path, st.session_state.uploaded_files)
+                    st.success("File deleted!")
+                    st.experimental_rerun()
 
-# ---------- Export Data ----------
 elif page == "Export Data":
     st.title("📤 Export Your Data")
-
     if st.button("Export Ideas to CSV"):
         export_to_csv(st.session_state.ideas, ["text", "timestamp"], "ideas_export.csv")
         st.success("ideas_export.csv saved")
-
     if st.button("Export Links to CSV"):
         export_to_csv(st.session_state.links, ["url", "note", "timestamp"], "links_export.csv")
         st.success("links_export.csv saved")
