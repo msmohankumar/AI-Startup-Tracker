@@ -186,30 +186,38 @@ elif page == "Upload Files":
     st.subheader("📚 Previously Uploaded Files")
     for i, file in enumerate(st.session_state.uploaded_files):
         with st.expander(f"{file['filename']} ({file['timestamp']})"):
-            with open(file['path'], "rb") as f:
-                st.download_button(
-                    label=f"📥 Download {file['filename']}",
-                    data=f.read(),
-                    file_name=file['filename'],
-                    key=f"download_{i}"
-                )
+            if os.path.exists(file['path']):
+                with open(file['path'], "rb") as f:
+                    st.download_button(
+                        label=f"📥 Download {file['filename']}",
+                        data=f.read(),
+                        file_name=file['filename'],
+                        key=f"download_{i}"
+                    )
+            else:
+                st.warning("⚠️ File not found on disk.")
+
             col1, col2 = st.columns([1, 1])
             with col1:
                 new_filename = st.text_input(f"Rename File {i+1}", value=file['filename'], key=f"rename_{i}")
                 if st.button(f"💾 Update File {i+1}", key=f"update_{i}"):
                     new_path = os.path.join("uploads", new_filename)
-                    os.rename(file['path'], new_path)
-                    st.session_state.uploaded_files[i]['filename'] = new_filename
-                    st.session_state.uploaded_files[i]['path'] = new_path
-                    save_json(upload_file_path, st.session_state.uploaded_files)
-                    st.success("File renamed!")
-                    st.experimental_rerun()
+                    if os.path.exists(file['path']):
+                        os.rename(file['path'], new_path)
+                        st.session_state.uploaded_files[i]['filename'] = new_filename
+                        st.session_state.uploaded_files[i]['path'] = new_path
+                        save_json(upload_file_path, st.session_state.uploaded_files)
+                        st.success("File renamed!")
+                        st.experimental_rerun()
+                    else:
+                        st.error("Original file missing. Cannot rename.")
             with col2:
                 if st.button(f"❌ Delete File {i+1}", key=f"delete_{i}"):
-                    os.remove(file['path'])
+                    if os.path.exists(file['path']):
+                        os.remove(file['path'])
                     st.session_state.uploaded_files.pop(i)
                     save_json(upload_file_path, st.session_state.uploaded_files)
-                    st.success("File deleted!")
+                    st.success("File entry removed!")
                     st.experimental_rerun()
 
 elif page == "Export Data":
