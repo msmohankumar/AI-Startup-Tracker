@@ -196,7 +196,12 @@ elif page == "Upload Files":
 
     st.subheader("📚 Previously Uploaded Files")
     for file in st.session_state.uploaded_files:
-        st.markdown(f"**{file['filename']}** uploaded at `{file['timestamp']}`")
+        with open(file['path'], "rb") as f:
+            st.download_button(
+                label=f"📥 Download {file['filename']} ({file['timestamp']})",
+                data=f.read(),
+                file_name=file['filename']
+            )
 
 # ---------- Export Data ----------
 elif page == "Export Data":
