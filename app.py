@@ -1,5 +1,3 @@
-# app.py
-
 import streamlit as st
 import json
 import os
@@ -177,8 +175,8 @@ elif page == "Upload Files":
 
     uploaded_file = st.file_uploader("Upload a document or PDF")
     if uploaded_file:
-        file_path = os.path.join("uploads", uploaded_file.name)
         os.makedirs("uploads", exist_ok=True)
+        file_path = os.path.join("uploads", uploaded_file.name)
         with open(file_path, "wb") as f:
             f.write(uploaded_file.getbuffer())
         st.success(f"Uploaded: {uploaded_file.name}")
