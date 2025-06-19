@@ -46,14 +46,16 @@ def summarize_url(url):
 
 # ---------- Sidebar ----------
 st.sidebar.title("🚀 AI Startup Tracker")
-page = st.sidebar.radio("Go to", [
+page = st.sidebar.radio("Navigate", [
     "Phase Tracker", "Ideas", "Testing Notes", "Roadmap",
     "Useful Links", "Upload Files", "Export Data"
 ])
 
-# ---------- Pages ----------
+# ---------- Main Content ----------
+st.title("AI Startup Tracker")
+
 if page == "Phase Tracker":
-    st.title("📌 Startup Phase Tracker")
+    st.header("📌 Startup Phase Tracker")
     phases = [
         "Ideation & Learning (0-1 month)",
         "Market Research & Validation (1-2.5 months)",
@@ -68,11 +70,12 @@ if page == "Phase Tracker":
             st.success(f"✅ Completed: {phase}")
 
 elif page == "Ideas":
-    st.title("💡 Idea Box")
+    st.header("💡 Idea Box")
     idea_file = "ideas.json"
     if "ideas" not in st.session_state:
         st.session_state.ideas = load_json(idea_file)
 
+    st.subheader("Add a New Idea")
     name = st.text_input("Your Name:")
     title = st.text_input("Idea Title:")
     new_idea = st.text_area("Describe your idea here:")
@@ -94,7 +97,6 @@ elif page == "Ideas":
 
     st.subheader("Your Saved Ideas")
     for i, idea in enumerate(st.session_state.ideas):
-        # Check if the required keys exist
         if "title" in idea and "name" in idea and "timestamp" in idea:
             with st.expander(f"{idea['title']} by {idea['name']} - {idea['timestamp']}"):
                 st.markdown(f"**Name:** {idea['name']}")
@@ -121,7 +123,7 @@ elif page == "Ideas":
             st.warning("One of the saved ideas is missing required fields.")
 
 elif page == "Testing Notes":
-    st.title("🧪 Testing Feedback Log")
+    st.header("🧪 Testing Feedback Log")
     if "test_notes" not in st.session_state:
         st.session_state.test_notes = []
 
@@ -137,7 +139,7 @@ elif page == "Testing Notes":
         st.markdown(f"- [{note['timestamp']}] {note['note']}")
 
 elif page == "Roadmap":
-    st.title("🛣️ Roadmap Overview")
+    st.header("🛣️ Roadmap Overview")
     roadmap_items = [
         "Month 0-1: Learn and Ideate",
         "Month 1-2.5: Market Research",
@@ -166,7 +168,7 @@ elif page == "Roadmap":
     st.radio("How confident are you about your startup progress?", ["Very confident", "Somewhat confident", "Need support"], key="progress_poll")
 
 elif page == "Useful Links":
-    st.title("🔗 Useful Links and Resources")
+    st.header("🔗 Useful Links and Resources")
     link_file = "links.json"
     if "links" not in st.session_state:
         st.session_state.links = load_json(link_file)
@@ -204,7 +206,7 @@ elif page == "Useful Links":
                     st.experimental_rerun()
 
 elif page == "Upload Files":
-    st.title("📄 Upload Your Files")
+    st.header("📄 Upload Your Files")
     upload_file_path = "uploaded_files.json"
     if "uploaded_files" not in st.session_state:
         st.session_state.uploaded_files = load_json(upload_file_path)
@@ -261,7 +263,7 @@ elif page == "Upload Files":
                     st.experimental_rerun()
 
 elif page == "Export Data":
-    st.title("📤 Export Your Data")
+    st.header("📤 Export Your Data")
     
     # Export Ideas to CSV
     if st.button("Export Ideas to CSV"):
