@@ -12,7 +12,10 @@ st.set_page_config(page_title="AI Startup Tracker", layout="wide")
 def load_json(filename, default=[]):
     if os.path.exists(filename):
         with open(filename, "r") as f:
-            return json.load(f)
+            try:
+                return json.load(f)
+            except json.JSONDecodeError:
+                return default  # Return default if JSON is invalid
     return default
 
 def save_json(filename, data):
@@ -68,32 +71,52 @@ elif page == "Ideas":
     if "ideas" not in st.session_state:
         st.session_state.ideas = load_json(idea_file)
 
+    name = st.text_input("Your Name:")
+    title = st.text_input("Idea Title:")
     new_idea = st.text_area("Describe your idea here:")
+    
     if st.button("Save Idea"):
-        if new_idea.strip():
-            st.session_state.ideas.append({
-                "text": new_idea.strip(),
+        if name.strip() and title.strip():  # Allow saving even if description is empty
+            new_idea_entry = {
+                "name": name.strip(),
+                "title": title.strip(),
+                "description": new_idea.strip(),  # Can be empty
                 "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
-            })
+            }
+            st.session_state.ideas.append(new_idea_entry)
             save_json(idea_file, st.session_state.ideas)
             st.success("✅ Idea saved successfully!")
             st.experimental_rerun()
+        else:
+            st.error("Please fill in your name and title before saving.")
 
     st.subheader("Your Saved Ideas")
     for i, idea in enumerate(st.session_state.ideas):
-        with st.expander(f"Idea {i+1} - {idea['timestamp']}"):
-            edited_text = st.text_area(f"Edit Idea {i+1}", value=idea["text"], key=f"edit_idea_{i}")
-            col1, col2 = st.columns([1, 1])
-            with col1:
-                if st.button(f"💾 Update {i+1}"):
-                    st.session_state.ideas[i]["text"] = edited_text
-                    save_json(idea_file, st.session_state.ideas)
-                    st.success("Updated!")
-            with col2:
-                if st.button(f"❌ Delete {i+1}"):
-                    st.session_state.ideas.pop(i)
-                    save_json(idea_file, st.session_state.ideas)
-                    st.experimental_rerun()
+        # Check if the required keys exist
+        if "title" in idea and "name" in idea and "timestamp" in idea:
+            with st.expander(f"{idea['title']} by {idea['name']} - {idea['timestamp']}"):
+                st.markdown(f"**Name:** {idea['name']}")
+                st.markdown(f"**Title:** {idea['title']}")
+                st.markdown(f"**Description:** {idea['description'] if idea['description'] else 'No description provided.'}")
+                edited_name = st.text_input(f"Edit Name {i+1}", value=idea["name"], key=f"edit_name_{i}")
+                edited_title = st.text_input(f"Edit Title {i+1}", value=idea["title"], key=f"edit_title_{i}")
+                edited_description = st.text_area(f"Edit Idea Description {i+1}", value=idea["description"], key=f"edit_idea_{i}")
+                col1, col2 = st.columns([1, 1])
+                with col1:
+                    if st.button(f"💾 Update {i+1}", key=f"update_{i}"):
+                        st.session_state.ideas[i]["name"] = edited_name
+                        st.session_state.ideas[i]["title"] = edited_title
+                        st.session_state.ideas[i]["description"] = edited_description
+                        save_json(idea_file, st.session_state.ideas)
+                        st.success("Updated!")
+                with col2:
+                    if st.button(f"❌ Delete {i+1}", key=f"delete_{i}"):
+                        st.session_state.ideas.pop(i)
+                        save_json(idea_file, st.session_state.ideas)
+                        st.success("Idea deleted!")
+                        st.experimental_rerun()
+        else:
+            st.warning("One of the saved ideas is missing required fields.")
 
 elif page == "Testing Notes":
     st.title("🧪 Testing Feedback Log")
@@ -238,7 +261,7 @@ elif page == "Upload Files":
 elif page == "Export Data":
     st.title("📤 Export Your Data")
     if st.button("Export Ideas to CSV"):
-        export_to_csv(st.session_state.ideas, ["text", "timestamp"], "ideas_export.csv")
+        export_to_csv(st.session_state.ideas, ["name", "title", "description", "timestamp"], "ideas_export.csv")
         st.success("ideas_export.csv saved")
     if st.button("Export Links to CSV"):
         export_to_csv(st.session_state.links, ["url", "note", "timestamp"], "links_export.csv")
