@@ -28,13 +28,16 @@ def export_to_csv(data, fields, filename):
 def summarize_url(url):
     try:
         res = requests.get(url, timeout=5)
+        res.raise_for_status()
         soup = BeautifulSoup(res.text, 'html.parser')
         paragraphs = soup.find_all('p')
+        if not paragraphs:
+            return "No content found to summarize."
         text = ' '.join(p.get_text() for p in paragraphs[:5])
         summary = text[:300] + "..." if len(text) > 300 else text
-        return summary
-    except:
-        return "Could not summarize this URL."
+        return summary or "Summary is empty."
+    except Exception as e:
+        return f"Error fetching content: {str(e)}"
 
 # ---------- Sidebar Navigation ----------
 st.sidebar.title("🚀 AI Startup Tracker")
@@ -173,13 +176,27 @@ elif page == "Useful Links":
 elif page == "Upload Files":
     st.title("📄 Upload Your Files")
 
+    upload_file_path = "uploaded_files.json"
+    if "uploaded_files" not in st.session_state:
+        st.session_state.uploaded_files = load_json(upload_file_path)
+
     uploaded_file = st.file_uploader("Upload a document or PDF")
     if uploaded_file:
         os.makedirs("uploads", exist_ok=True)
         file_path = os.path.join("uploads", uploaded_file.name)
         with open(file_path, "wb") as f:
             f.write(uploaded_file.getbuffer())
+        st.session_state.uploaded_files.append({
+            "filename": uploaded_file.name,
+            "path": file_path,
+            "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+        })
+        save_json(upload_file_path, st.session_state.uploaded_files)
         st.success(f"Uploaded: {uploaded_file.name}")
+
+    st.subheader("📚 Previously Uploaded Files")
+    for file in st.session_state.uploaded_files:
+        st.markdown(f"**{file['filename']}** uploaded at `{file['timestamp']}`")
 
 # ---------- Export Data ----------
 elif page == "Export Data":
